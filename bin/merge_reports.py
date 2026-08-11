@@ -41,7 +41,7 @@ def main(args: argparse.Namespace):
         #     description: "Whether tumor and/or germline are tested."
         #   qualityControlStatus:
         #     title: "Overall QC Status"
-        #     description: "Whether deduplicated pipeline-computed metrics meet the thresholds required by BfArM. Deviations (> 10%) from the provided metrics lead to the reporting of the submission but do not lead to a failed quality control."
+        #     description: "Whether all pipeline-computed metrics meet the thresholds required by BfArM. A provided metric deviating more than 10% from the computed value leads to the reporting of the submission but does not lead to a failed quality control."
         #     cond_formatting_rules:
         #       pass:
         #         - s_eq: "PASS"
@@ -58,16 +58,16 @@ def main(args: argparse.Namespace):
         #     description: "Mean depth of coverage required to pass quality control."
         #   meanDepthOfCoverageDeviation:
         #     title: "Mean Depth of Coverage Deviation"
-        #     description: "Percent deviation of pipeline-computed mean depth of coverage from provided value."
+        #     description: "Percent deviation of the provided mean depth of coverage from the pipeline-computed value, relative to the computed value."
         #     suffix: '%'
         #   meanDepthOfCoverageQCStatus:
         #     title: "Mean Depth of Coverage QC Status"
-        #     description: "'THRESHOLD NOT MET' if the computed mean depth of coverage is below the value required by BfArM (fails QC), 'TOO LOW' if it deviates by more than 10% below the provided value (reported, but does not fail QC), 'PASS' otherwise."
+        #     description: "'THRESHOLD NOT MET' if the computed mean depth of coverage is below the value required by BfArM (fails QC), 'DEV > 10%' if the provided value deviates by more than 10% from it in either direction (reported, but does not fail QC), 'PASS' otherwise."
         #     cond_formatting_rules:
         #       pass:
         #         - s_eq: "PASS"
         #       warn:
-        #         - s_eq: "TOO LOW"
+        #         - s_eq: "DEV > 10%"
         #       fail:
         #         - s_eq: "THRESHOLD NOT MET"
         #   percentBasesAboveQualityThreshold:
@@ -87,16 +87,16 @@ def main(args: argparse.Namespace):
         #     suffix: '%'
         #   percentBasesAboveQualityThresholdDeviation:
         #     title: "Percent Bases Above Quality Threshold Deviation"
-        #     description: "Percent deviation of pipeline-computed percentage of bases above quality threshold from provided value."
+        #     description: "Percent deviation of the provided percentage of bases above quality threshold from the pipeline-computed value, relative to the computed value."
         #     suffix: '%'
         #   percentBasesAboveQualityThresholdQCStatus:
         #     title: "Percent Bases Above Quality Threshold QC Status"
-        #     description: "'THRESHOLD NOT MET' if the computed percentage of bases above the quality threshold is below the value required by BfArM (fails QC), 'TOO LOW' if it deviates by more than 10% below the provided value (reported, but does not fail QC), 'PASS' otherwise."
+        #     description: "'THRESHOLD NOT MET' if the computed percentage of bases above the quality threshold is below the value required by BfArM (fails QC), 'DEV > 10%' if the provided value deviates by more than 10% from it in either direction (reported, but does not fail QC), 'PASS' otherwise."
         #     cond_formatting_rules:
         #       pass:
         #         - s_eq: "PASS"
         #       warn:
-        #         - s_eq: "TOO LOW"
+        #         - s_eq: "DEV > 10%"
         #       fail:
         #         - s_eq: "THRESHOLD NOT MET"
         #   targetedRegionsAboveMinCoverage:
@@ -113,16 +113,16 @@ def main(args: argparse.Namespace):
         #     description: "Minimum proportion of target regions above the minimum coverage threshold required to pass quality control."
         #   targetedRegionsAboveMinCoverageDeviation:
         #     title: "Targeted Regions Above Minimum Coverage Deviation"
-        #     description: "Percent deviation of pipeline-computed proportion of target regions above the minimum coverage threshold from provided value."
+        #     description: "Percent deviation of the provided proportion of target regions above the minimum coverage threshold from the pipeline-computed value, relative to the computed value."
         #     suffix: '%'
         #   targetedRegionsAboveMinCoverageQCStatus:
         #     title: "Targeted Regions Above Minimum Coverage QC Status"
-        #     description: "'THRESHOLD NOT MET' if the computed proportion of target regions above the minimum coverage is below the value required by BfArM (fails QC), 'TOO LOW' if it deviates by more than 10% below the provided value (reported, but does not fail QC), 'PASS' otherwise."
+        #     description: "'THRESHOLD NOT MET' if the computed proportion of target regions above the minimum coverage is below the value required by BfArM (fails QC), 'DEV > 10%' if the provided value deviates by more than 10% from it in either direction (reported, but does not fail QC), 'PASS' otherwise."
         #     cond_formatting_rules:
         #       pass:
         #         - s_eq: "PASS"
         #       warn:
-        #         - s_eq: "TOO LOW"
+        #         - s_eq: "DEV > 10%"
         #       fail:
         #         - s_eq: "THRESHOLD NOT MET"
         #   grzQcWorkflowVersion:

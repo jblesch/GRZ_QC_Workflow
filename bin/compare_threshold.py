@@ -2,10 +2,53 @@
 
 import argparse
 import json
+from enum import StrEnum
 
 import pandas as pd
 
 PCT_DEV_CUTOFF = 10
+
+
+class QCStatus(StrEnum):
+    PASS = "PASS"
+    DEVIATION = "DEV > 10%"
+    THRESHOLD_NOT_MET = "THRESHOLD NOT MET"
+
+
+def percent_deviation(measured: float, provided: float | None) -> float | None:
+    """Percent deviation of the value provided by the Leistungserbringer from the value
+    computed by the pipeline.
+
+    Following the BfArM criteria, the deviation is expressed relative to the value
+    determined by the GRZ (``measured``).
+
+    :param measured: value computed by this pipeline
+    :param provided: value provided in the submission metadata, if any
+    :return: signed percent deviation, or ``None`` if no value was provided or the computed
+        value is zero (deviation undefined)
+    """
+    if not provided or not measured:
+        return None
+    return (measured - provided) / measured * 100
+
+
+def classify_metric(threshold_passed: bool, pct_dev: float | None) -> QCStatus:
+    """Determine the QC status of a single metric.
+
+    :param threshold_passed: whether the value computed by the pipeline meets the required
+        BfArM threshold
+    :param pct_dev: percent deviation of the computed value from the value provided by the
+        Leistungserbringer, or ``None`` if no value was provided
+    :return: ``THRESHOLD NOT MET`` if the computed value is below the required threshold
+        (fails QC); ``DEV > 10%`` if it deviates by more than ``PCT_DEV_CUTOFF`` percent from
+        the provided value in either direction (reported, but does not fail QC); ``PASS``
+        otherwise
+    """
+    if not threshold_passed:
+        return QCStatus.THRESHOLD_NOT_MET
+    if pct_dev is not None and abs(pct_dev) > PCT_DEV_CUTOFF:
+        return QCStatus.DEVIATION
+    return QCStatus.PASS
 
 
 def main(args: argparse.Namespace):
@@ -33,13 +76,9 @@ def main(args: argparse.Namespace):
     )
 
     # percent deviation - mean depth of coverage
-    if mean_depth_of_coverage_provided:
-        mean_depth_of_coverage__prp_dev = (
-            mean_depth_of_coverage_measured - args.meanDepthOfCoverage
-        ) / args.meanDepthOfCoverage
-        mean_depth_of_coverage__pct_dev = mean_depth_of_coverage__prp_dev * 100
-    else:
-        mean_depth_of_coverage__pct_dev = None
+    mean_depth_of_coverage__pct_dev = percent_deviation(
+        mean_depth_of_coverage_measured, mean_depth_of_coverage_provided
+    )
 
     # Base quality threshold
     quality_threshold = args.qualityThreshold
@@ -89,16 +128,10 @@ def main(args: argparse.Namespace):
     )
 
     # percent deviation - percent bases above quality threshold
-    if percent_bases_above_quality_threshold_provided:
-        percent_bases_above_quality_threshold__prp_dev = (
-            percent_bases_above_quality_threshold_measured
-            - args.percentBasesAboveQualityThreshold
-        ) / args.percentBasesAboveQualityThreshold
-        percent_bases_above_quality_threshold__pct_dev = (
-            percent_bases_above_quality_threshold__prp_dev * 100
-        )
-    else:
-        percent_bases_above_quality_threshold__pct_dev = None
+    percent_bases_above_quality_threshold__pct_dev = percent_deviation(
+        percent_bases_above_quality_threshold_measured,
+        percent_bases_above_quality_threshold_provided,
+    )
 
     # Minimum coverage of target regions to pass
     min_coverage = args.minCoverage
@@ -131,52 +164,27 @@ def main(args: argparse.Namespace):
     )
 
     # percent deviation - targeted regions above minimum coverage
-    if targeted_regions_above_min_coverage_provided:
-        targeted_regions_above_min_coverage__prp_dev = (
-            targeted_regions_above_min_coverage_measured
-            - args.targetedRegionsAboveMinCoverage
-        ) / args.targetedRegionsAboveMinCoverage
-        targeted_regions_above_min_coverage__pct_dev = (
-            targeted_regions_above_min_coverage__prp_dev * 100
-        )
-    else:
-        targeted_regions_above_min_coverage__pct_dev = None
+    targeted_regions_above_min_coverage__pct_dev = percent_deviation(
+        targeted_regions_above_min_coverage_measured,
+        targeted_regions_above_min_coverage_provided,
+    )
 
     ### Perform the quality check(s)
-    if not mean_depth_of_coverage__threshold_passed:
-        mean_depth_of_coverage__qc_status = "THRESHOLD NOT MET"
-    elif (
-        mean_depth_of_coverage__pct_dev is not None
-        and mean_depth_of_coverage__pct_dev < -PCT_DEV_CUTOFF
-    ):
-        mean_depth_of_coverage__qc_status = "TOO LOW"
-    else:
-        mean_depth_of_coverage__qc_status = "PASS"
+    mean_depth_of_coverage__qc_status = classify_metric(
+        mean_depth_of_coverage__threshold_passed, mean_depth_of_coverage__pct_dev
+    )
+    percent_bases_above_quality_threshold__qc_status = classify_metric(
+        percent_bases_above_quality_threshold__threshold_passed,
+        percent_bases_above_quality_threshold__pct_dev,
+    )
+    targeted_regions_above_min_coverage__qc_status = classify_metric(
+        targeted_regions_above_min_coverage__threshold_passed,
+        targeted_regions_above_min_coverage__pct_dev,
+    )
 
-    if not percent_bases_above_quality_threshold__threshold_passed:
-        percent_bases_above_quality_threshold__qc_status = "THRESHOLD NOT MET"
-    elif (
-        percent_bases_above_quality_threshold__pct_dev is not None
-        and percent_bases_above_quality_threshold__pct_dev < -PCT_DEV_CUTOFF
-    ):
-        percent_bases_above_quality_threshold__qc_status = "TOO LOW"
-    else:
-        percent_bases_above_quality_threshold__qc_status = "PASS"
-
-    if not targeted_regions_above_min_coverage__threshold_passed:
-        targeted_regions_above_min_coverage__qc_status = "THRESHOLD NOT MET"
-    elif (
-        targeted_regions_above_min_coverage__pct_dev is not None
-        and targeted_regions_above_min_coverage__pct_dev < -PCT_DEV_CUTOFF
-    ):
-        targeted_regions_above_min_coverage__qc_status = "TOO LOW"
-    else:
-        targeted_regions_above_min_coverage__qc_status = "PASS"
-
-    # A metric more than PCT_DEV_CUTOFF percent below the value provided by the
-    # Leistungserbringer ("TOO LOW") is reported to the Plattformtraeger, but does not fail
-    # the Detailpruefung as long as the value computed here still meets the BfArM threshold.
-    quality_check_passed = "THRESHOLD NOT MET" not in (
+    # A metric flagged DEV > 10% is reported to the Plattformträger but does not fail the
+    # Detailprüfung, as long as the value computed here still meets the BfArM threshold.
+    quality_check_passed = QCStatus.THRESHOLD_NOT_MET not in (
         mean_depth_of_coverage__qc_status,
         percent_bases_above_quality_threshold__qc_status,
         targeted_regions_above_min_coverage__qc_status,
