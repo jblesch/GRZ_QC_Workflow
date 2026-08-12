@@ -11,7 +11,7 @@ PCT_DEV_CUTOFF = 10
 
 class QCStatus(StrEnum):
     PASS = "PASS"
-    DEVIATION = "DEV > 10%"
+    DEVIATION = "DEVIATION"
     THRESHOLD_NOT_MET = "THRESHOLD NOT MET"
 
 
@@ -40,7 +40,7 @@ def classify_metric(threshold_passed: bool, pct_dev: float | None) -> QCStatus:
     :param pct_dev: percent deviation between the computed and provided values (see
         :func:`percent_deviation`), or ``None`` if no value was provided
     :return: ``THRESHOLD NOT MET`` if the computed value is below the required threshold
-        (fails QC); ``DEV > 10%`` if the provided value deviates by more than
+        (fails QC); ``DEVIATION`` if the provided value deviates by more than
         ``PCT_DEV_CUTOFF`` percent from the computed value in either direction (reported, but
         does not fail QC); ``PASS`` otherwise
     """
@@ -182,7 +182,7 @@ def main(args: argparse.Namespace):
         targeted_regions_above_min_coverage__pct_dev,
     )
 
-    # A metric flagged DEV > 10% is reported to the Plattformträger but does not fail the
+    # A metric flagged DEVIATION is reported to the Plattformträger but does not fail the
     # Detailprüfung, as long as the value computed here still meets the BfArM threshold.
     quality_check_passed = QCStatus.THRESHOLD_NOT_MET not in (
         mean_depth_of_coverage__qc_status,
