@@ -16,11 +16,11 @@ class QCStatus(StrEnum):
 
 
 def percent_deviation(measured: float, provided: float | None) -> float | None:
-    """Percent deviation of the value provided by the Leistungserbringer from the value
-    computed by the pipeline.
+    """Signed percent deviation between the computed and provided values, relative to the
+    value determined by the GRZ (``measured``).
 
-    Following the BfArM criteria, the deviation is expressed relative to the value
-    determined by the GRZ (``measured``).
+    The result is negative when the provided value exceeds the computed value (i.e. the
+    Leistungserbringer reported too high) and positive when it is below.
 
     :param measured: value computed by this pipeline
     :param provided: value provided in the submission metadata, if any
@@ -37,12 +37,12 @@ def classify_metric(threshold_passed: bool, pct_dev: float | None) -> QCStatus:
 
     :param threshold_passed: whether the value computed by the pipeline meets the required
         BfArM threshold
-    :param pct_dev: percent deviation of the computed value from the value provided by the
-        Leistungserbringer, or ``None`` if no value was provided
+    :param pct_dev: percent deviation between the computed and provided values (see
+        :func:`percent_deviation`), or ``None`` if no value was provided
     :return: ``THRESHOLD NOT MET`` if the computed value is below the required threshold
-        (fails QC); ``DEV > 10%`` if it deviates by more than ``PCT_DEV_CUTOFF`` percent from
-        the provided value in either direction (reported, but does not fail QC); ``PASS``
-        otherwise
+        (fails QC); ``DEV > 10%`` if the provided value deviates by more than
+        ``PCT_DEV_CUTOFF`` percent from the computed value in either direction (reported, but
+        does not fail QC); ``PASS`` otherwise
     """
     if not threshold_passed:
         return QCStatus.THRESHOLD_NOT_MET

@@ -58,7 +58,7 @@ def main(args: argparse.Namespace):
         #     description: "Mean depth of coverage required to pass quality control."
         #   meanDepthOfCoverageDeviation:
         #     title: "Mean Depth of Coverage Deviation"
-        #     description: "Percent deviation of the provided mean depth of coverage from the pipeline-computed value, relative to the computed value."
+        #     description: "Signed percent deviation between the computed and provided mean depth of coverage, relative to the computed value. Negative if the provided value is higher (the Leistungserbringer reported too high)."
         #     suffix: '%'
         #   meanDepthOfCoverageQCStatus:
         #     title: "Mean Depth of Coverage QC Status"
@@ -87,7 +87,7 @@ def main(args: argparse.Namespace):
         #     suffix: '%'
         #   percentBasesAboveQualityThresholdDeviation:
         #     title: "Percent Bases Above Quality Threshold Deviation"
-        #     description: "Percent deviation of the provided percentage of bases above quality threshold from the pipeline-computed value, relative to the computed value."
+        #     description: "Signed percent deviation between the computed and provided percentage of bases above quality threshold, relative to the computed value. Negative if the provided value is higher (the Leistungserbringer reported too high)."
         #     suffix: '%'
         #   percentBasesAboveQualityThresholdQCStatus:
         #     title: "Percent Bases Above Quality Threshold QC Status"
@@ -113,7 +113,7 @@ def main(args: argparse.Namespace):
         #     description: "Minimum proportion of target regions above the minimum coverage threshold required to pass quality control."
         #   targetedRegionsAboveMinCoverageDeviation:
         #     title: "Targeted Regions Above Minimum Coverage Deviation"
-        #     description: "Percent deviation of the provided proportion of target regions above the minimum coverage threshold from the pipeline-computed value, relative to the computed value."
+        #     description: "Signed percent deviation between the computed and provided proportion of target regions above the minimum coverage threshold, relative to the computed value. Negative if the provided value is higher (the Leistungserbringer reported too high)."
         #     suffix: '%'
         #   targetedRegionsAboveMinCoverageQCStatus:
         #     title: "Targeted Regions Above Minimum Coverage QC Status"
