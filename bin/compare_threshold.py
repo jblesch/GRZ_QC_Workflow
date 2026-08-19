@@ -27,7 +27,10 @@ def percent_deviation(measured: float, provided: float | None) -> float | None:
     :return: signed percent deviation, or ``None`` if no value was provided or the computed
         value is zero (deviation undefined)
     """
-    if not provided or not measured:
+    # A provided value of zero is treated like a missing one (the Nextflow module already
+    # omits zero-valued provided metrics); a computed value of zero leaves the relative
+    # deviation undefined.
+    if provided is None or provided == 0 or measured == 0:
         return None
     return (measured - provided) / measured * 100
 
